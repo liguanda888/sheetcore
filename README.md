@@ -46,8 +46,9 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `graph/` | 依赖图：建图、拓扑排序、**环检测** |
 | `engine/` | 增量重算引擎、错误传播、计算轨迹 |
 | `functions/` | 函数库（数学/逻辑/文本/查找/统计） |
-| `render/` | 终端排版：显示列宽、表格对齐 |
-| `cmd/main/` | 命令行入口（`eval` / `demo` / `example` / `bench`） |
+| `render/` | 终端排版：显示列宽、表格对齐、比值格式 |
+| `cli/` | 命令行解析：子命令、选项、用法文本 |
+| `cmd/main/` | 命令行入口（**纯 I/O**，不做解析） |
 
 ## 状态
 
@@ -61,11 +62,12 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `graph/` 依赖图、拓扑排序、环检测 | ✅ | 17 |
 | `engine/` 增量重算、错误传播、查找函数集成 | ✅ | 52 |
 | `functions/` 函数库（**38 个**） | ✅ | 覆盖在 engine 用例里 |
-| `render/` 终端排版（显示列宽、表格对齐） | ✅ | 9 |
+| `render/` 终端排版（显示列宽、表格对齐、比值格式） | ✅ | 13 |
+| `cli/` 命令行解析（子命令、选项、用法文本） | ✅ | 25 |
 | `cmd/main/` CLI | ✅ | 手动 + CI 验证 |
 
 ```
-moon test --target native   →  Total tests: 151, passed: 151, failed: 0
+moon test --target native   →  Total tests: 180, passed: 180, failed: 0
 ```
 
 函数覆盖：聚合（`SUM`/`PRODUCT`/`AVERAGE`/`MIN`/`MAX`/`MEDIAN`/`COUNT`/
@@ -99,6 +101,10 @@ _build/native/debug/build/cmd/main/main.exe example
 
 # 量一下增量到底省了多少
 _build/native/debug/build/cmd/main/main.exe bench
+
+# 有什么命令、某个选项是什么意思
+_build/native/debug/build/cmd/main/main.exe help
+_build/native/debug/build/cmd/main/main.exe help bench
 ```
 
 `example` 的输出（一张会真的出现在工作里的表）：
@@ -166,6 +172,23 @@ recomputed 3 of 7 cells: A1 -> B1 -> C1
 > （`'B1==IFERROR(1/0,"n/a")'` 到不了程序手里）。这是 PowerShell 向原生程序
 > 传参的老问题，不是程序的行为 —— 命令行本身只做原样透传，字符串字面量
 > 由单元测试覆盖。需要测这类公式时请写进脚本文件再调用。
+
+## 已知限制
+
+命令行有两处和常见 CLI 不一样，**都是实测出来的**，写在这里而不是等人踩到：
+
+| 限制 | 实测 | 为什么 |
+|---|---|---|
+| **出错时退出码仍是 0** | `sheetcore nosuchcmd` 打印 `error: unknown command: ...`，退出码 0 | MoonBit core 没有 `exit`。要置非零退出码只能直接调 libc（或 js 的 `process.exit`），也就是逐后端写 FFI —— core 自带的 `argparse` 正是这么做的，而且它**只**实现了 exit 0，错误一律 `raise` 出去。本项目把"零依赖、无 FFI、三后端可跑"当成核心取舍，不为退出码破这个例 |
+| **错误信息打在 stdout** | `stderr` 长度为 0，`error: ...` 在 stdout | 同上：core 只有 `println`，没有 `eprintln` |
+
+后果很具体：`sheetcore eval ... && 下一步` **不会**因为参数写错而中断。
+需要自动化判定的地方，请检查输出里的 `error:` 前缀，而不是退出码 ——
+CI 里那一步 `CLI error handling` 就是这么写的。
+
+这个限制有代价，也有边界：它只影响命令行这一层。**内核本身不吞错误** ——
+公式错误是 `#DIV/0!` 这样的值，会随依赖图传播、能被 `ISERROR` 检测；
+`@cli.parse` 也把"用户说错了什么"当作返回值交给调用方，而不是丢弃。
 
 ## 构建
 

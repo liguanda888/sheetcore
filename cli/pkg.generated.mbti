@@ -1,0 +1,51 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore/cli"
+
+// Values
+pub fn contains_char(StringView, Char) -> Bool
+
+pub fn default_bench_options() -> BenchOptions
+
+pub fn drop_first(Array[String]) -> Array[String]
+
+pub let max_bench_cells : Int
+
+pub fn parse(Array[String]) -> Command
+
+pub fn parse_int(StringView) -> Int?
+
+pub fn split_first(StringView, Char) -> (String, String)?
+
+pub fn usage_bench() -> String
+
+pub fn usage_demo() -> String
+
+pub fn usage_eval() -> String
+
+pub fn usage_example() -> String
+
+pub fn usage_for(String?) -> String
+
+pub fn usage_top() -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct BenchOptions {
+  chains : Int
+  length : Int
+  repeat : Int
+}
+
+pub(all) enum Command {
+  Eval(Bool, Array[(String, String)])
+  Demo
+  Example
+  Bench(BenchOptions)
+  Help(String?)
+  Bad(String, String)
+}
+
+// Type aliases
+
+// Traits

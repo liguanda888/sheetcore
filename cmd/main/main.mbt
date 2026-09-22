@@ -1,90 +1,40 @@
 ///|
 /// SheetCore 命令行。
 ///
-/// 用法：
-///   sheetcore eval A1=1 A2=2 B1==A1+A2       求值并打印整张表
-///   sheetcore eval --trace A1=1 B1==A1+1     同时打印重算轨迹
-///   sheetcore demo                           演示增量重算
-///   sheetcore --help
+/// 这一层**只做 I/O**：把 `@cli.parse` 的结果执行出来，把结果打到 stdout。
+/// 参数怎么解释、用法文本长什么样，全在 `cli/` 里（纯逻辑、可离线断言）。
 ///
-/// 参数里 `CELL=CONTENT` 只在**第一个** `=` 处切分，所以 `B1==A1+A2`
-/// 会正确得到单元格 `B1` 与内容 `=A1+A2`。
+/// 为什么这样切：参数解析原来就长在这里，而这是唯一没有测试的包 ——
+/// 于是「拼错的子命令被当成单元格内容」「--help 报错而不是给帮助」
+/// 这类毛病只能靠手敲才发现。规则搬走之后，它们被 25 条测试钉住了。
 
 ///|
 fn main {
-  let args = @env.args()
-  // args[0] 是可执行文件名，跳过
-  let rest : Array[String] = []
+  let argv = @env.args()
+  // argv[0] 是可执行文件名，跳过
+  let args : Array[String] = []
   let mut i = 1
-  while i < args.length() {
-    rest.push(args[i])
+  while i < argv.length() {
+    args.push(argv[i])
     i = i + 1
   }
-  if rest.length() == 0 {
-    println(usage())
-    return
-  }
-  match rest[0] {
-    "eval" => run_eval(tail(rest))
-    "demo" => run_demo()
-    "example" => run_example()
-    "bench" => run_bench(tail(rest))
-    "--help" | "-h" | "help" => println(usage())
-    _ =>
-      // 没有子命令时，把全部参数当 `CELL=CONTENT` 处理，方便随手用
-      run_eval(rest)
-  }
-}
-
-///|
-fn usage() -> String {
-  "SheetCore — a spreadsheet calculation core in pure MoonBit\n" +
-  "\n" +
-  "Usage:\n" +
-  "  sheetcore eval A1=1 A2=2 B1==A1+A2     evaluate a sheet and print it\n" +
-  "  sheetcore eval --trace A1=1 B1==A1+1   also print the recalculation trace\n" +
-  "  sheetcore demo                         demonstrate incremental recalculation\n" +
-  "  sheetcore example                      a realistic quotation sheet\n" +
-  "  sheetcore bench [--chains=N] [--length=L] [--repeat=R]\n" +
-  "                                         incremental vs full recalculation\n" +
-  "  sheetcore --help\n" +
-  "\n" +
-  "Cell content starting with '=' is a formula; anything else is a literal.\n" +
-  "Only the first '=' splits cell from content, so B1==A1+A2 works."
-}
-
-///|
-fn tail(items : Array[String]) -> Array[String] {
-  let out : Array[String] = []
-  let mut i = 1
-  while i < items.length() {
-    out.push(items[i])
-    i = i + 1
-  }
-  out
-}
-
-///|
-fn run_eval(args : Array[String]) -> Unit {
-  let entries : Array[(String, String)] = []
-  let mut show_trace = false
-  for a in args {
-    if a == "--trace" {
-      show_trace = true
-      continue
-    }
-    match split_first(a, '=') {
-      Some(pair) => entries.push(pair)
-      None => {
-        println("error: expected CELL=CONTENT but got: " + a)
-        return
-      }
+  match @cli.parse(args) {
+    @cli.Command::Eval(show_trace, entries) => run_eval(entries, show_trace)
+    @cli.Command::Demo => run_demo()
+    @cli.Command::Example => run_example()
+    @cli.Command::Bench(opts) => run_bench(opts)
+    @cli.Command::Help(topic) => println(@cli.usage_for(topic))
+    @cli.Command::Bad(message, usage) => {
+      println("error: " + message)
+      println("")
+      println(usage)
     }
   }
-  if entries.length() == 0 {
-    println("error: nothing to evaluate")
-    return
-  }
+}
+
+///|
+/// 求值一张表并打印。`entries` 已由 `@cli` 切好，这里只负责喂给引擎。
+fn run_eval(entries : Array[(String, String)], show_trace : Bool) -> Unit {
   let wb = @engine.Workbook::new()
   match wb.set_many(entries) {
     Ok(_) => ()
@@ -189,33 +139,4 @@ fn render_trace(trace : @engine.Trace) -> String {
     buf.write_string(trace.error_cells.to_string())
   }
   buf.to_string()
-}
-
-///|
-/// 在**第一个** `sep` 处切分。返回 `None` 表示没有分隔符。
-fn split_first(s : StringView, sep : Char) -> (String, String)? {
-  let chars : Array[Char] = []
-  for ch in s {
-    chars.push(ch)
-  }
-  let mut i = 0
-  while i < chars.length() && chars[i] != sep {
-    i = i + 1
-  }
-  if i >= chars.length() {
-    return None
-  }
-  let head = StringBuilder::StringBuilder()
-  let mut k = 0
-  while k < i {
-    head.write_char(chars[k])
-    k = k + 1
-  }
-  let rest = StringBuilder::StringBuilder()
-  let mut j = i + 1
-  while j < chars.length() {
-    rest.write_char(chars[j])
-    j = j + 1
-  }
-  Some((head.to_string(), rest.to_string()))
 }

@@ -86,3 +86,54 @@ jobs:
           grep -q "cells recomputed: 2.0x fewer" bench.out \
             || { echo "incremental recalculation lost its advantage"; exit 1; }
           echo "CLI smoke test passed"
+
+      - name: CLI error handling
+        # 回归测试。这四条都曾经是实际行为：
+        #   - `nosuchcmd` 报「expected CELL=CONTENT but got: nosuchcmd」（答非所问）
+        #   - `eval --help` / `bench --help` 报错，而不是给帮助
+        #   - `demo extra` 静默忽略多余参数
+        #   - `bench --length=0` 把三个选项一起念一遍
+        #
+        # 判定的是输出里的 `error:` 前缀，**不是退出码** —— 原因见 README
+        # 「已知限制」：core 没有 exit，置非零退出码要写逐后端 FFI，本项目不用。
+        # 命令后面都跟 `|| true`，这样将来若真去置了退出码，这一步也不会假失败。
+        run: |
+          BIN="_build/native/debug/build/cmd/main/main.exe"
+          [ -x "$BIN" ] || BIN="_build/native/debug/build/cmd/main/main"
+          fail() { echo "FAIL: $1"; exit 1; }
+
+          echo "--- an unknown command is not read as cell content ---"
+          "$BIN" nosuchcmd > out.txt 2>&1 || true
+          cat out.txt
+          if ! grep -q "error: unknown command: nosuchcmd" out.txt; then
+            fail "an unknown command was not reported as such"
+          fi
+          if grep -q "expected CELL=CONTENT" out.txt; then
+            fail "an unknown command is still mistaken for cell content"
+          fi
+
+          echo "--- every subcommand answers --help ---"
+          for cmd in eval demo example bench; do
+            "$BIN" "$cmd" --help > out.txt 2>&1 || true
+            if ! grep -q "^Usage: sheetcore $cmd" out.txt; then
+              fail "$cmd --help did not print its own usage"
+            fi
+            if grep -q "error:" out.txt; then
+              fail "$cmd --help printed an error instead of help"
+            fi
+          done
+
+          echo "--- a wrong option names itself, not all three ---"
+          "$BIN" bench --length=0 > out.txt 2>&1 || true
+          cat out.txt
+          if ! grep -q "error: --length must be at least 1, got 0" out.txt; then
+            fail "the offending option was not named"
+          fi
+
+          echo "--- extra arguments are refused, not ignored ---"
+          "$BIN" demo extra > out.txt 2>&1 || true
+          if ! grep -q "error: demo takes no arguments" out.txt; then
+            fail "an extra argument was silently ignored"
+          fi
+
+          echo "CLI error handling passed"
