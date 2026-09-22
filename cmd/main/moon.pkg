@@ -8,6 +8,7 @@ import {
   "liguanda888/sheetcore/formula",
   "liguanda888/sheetcore/graph",
   "liguanda888/sheetcore/reference",
+  "liguanda888/sheetcore/render",
   "moonbitlang/core/env",
 }
 

@@ -73,6 +73,11 @@ jobs:
           cat demo.out
           grep -q "recomputed 3 of 7 cells" demo.out \
             || { echo "incremental recalculation did not skip unrelated cells"; exit 1; }
+          echo "--- example ---"
+          "$BIN" example > example.out
+          head -20 example.out
+          grep -q "recomputed 6 of 26 cells" example.out \
+            || { echo "the worked example no longer shows incremental recalculation"; exit 1; }
           echo "--- bench (light) ---"
           # 规模调小，只验证"增量确实少于全量"这个性质；耗时不作为断言
           # （机器不同，耗时不同，拿它当阈值只会制造假失败）。

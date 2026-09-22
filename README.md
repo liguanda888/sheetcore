@@ -46,7 +46,8 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `graph/` | 依赖图：建图、拓扑排序、**环检测** |
 | `engine/` | 增量重算引擎、错误传播、计算轨迹 |
 | `functions/` | 函数库（数学/逻辑/文本/查找/统计） |
-| `cmd/main/` | 命令行入口 |
+| `render/` | 终端排版：显示列宽、表格对齐 |
+| `cmd/main/` | 命令行入口（`eval` / `demo` / `example` / `bench`） |
 
 ## 状态
 
@@ -60,10 +61,11 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `graph/` 依赖图、拓扑排序、环检测 | ✅ | 17 |
 | `engine/` 增量重算、错误传播、查找函数集成 | ✅ | 52 |
 | `functions/` 函数库（**38 个**） | ✅ | 覆盖在 engine 用例里 |
-| `cmd/main/` CLI（`eval` / `demo` / `bench`） | ✅ | 手动 + CI 验证 |
+| `render/` 终端排版（显示列宽、表格对齐） | ✅ | 9 |
+| `cmd/main/` CLI | ✅ | 手动 + CI 验证 |
 
 ```
-moon test --target native   →  Total tests: 142, passed: 142, failed: 0
+moon test --target native   →  Total tests: 151, passed: 151, failed: 0
 ```
 
 函数覆盖：聚合（`SUM`/`PRODUCT`/`AVERAGE`/`MIN`/`MAX`/`MEDIAN`/`COUNT`/
@@ -92,9 +94,36 @@ _build/native/debug/build/cmd/main/main.exe eval --trace A1=1 B1==A1+1 C1==B1*2
 # 演示增量重算（录制演示视频用的就是它）
 _build/native/debug/build/cmd/main/main.exe demo
 
+# 一张真实用途的报价单：改动一行，看它牵动哪些格子
+_build/native/debug/build/cmd/main/main.exe example
+
 # 量一下增量到底省了多少
 _build/native/debug/build/cmd/main/main.exe bench
 ```
+
+`example` 的输出（一张会真的出现在工作里的表）：
+
+```
+项目    数量  单价  金额
+键盘    12    199   2388
+显示器  4     1299  5196
+线材    30    25    750
+
+合计                8334
+折扣率              0.1
+折扣                833.4
+应收                7500.6
+含税                8475.68
+
+=== 把显示器的数量从 4 改成 6 ===
+...
+合计                10932
+含税                11117.84
+
+recomputed 6 of 26 cells: B3 -> D3 -> D6 -> D8 -> D9 -> D10
+```
+
+只有显示器那一行和它下游的五格被重算；键盘与线材那两行没动。
 
 `bench` 的输出（本机实测）：
 

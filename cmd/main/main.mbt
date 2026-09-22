@@ -27,6 +27,7 @@ fn main {
   match rest[0] {
     "eval" => run_eval(tail(rest))
     "demo" => run_demo()
+    "example" => run_example()
     "bench" => run_bench(tail(rest))
     "--help" | "-h" | "help" => println(usage())
     _ =>
@@ -43,6 +44,7 @@ fn usage() -> String {
   "  sheetcore eval A1=1 A2=2 B1==A1+A2     evaluate a sheet and print it\n" +
   "  sheetcore eval --trace A1=1 B1==A1+1   also print the recalculation trace\n" +
   "  sheetcore demo                         demonstrate incremental recalculation\n" +
+  "  sheetcore example                      a realistic quotation sheet\n" +
   "  sheetcore bench [--chains=N] [--length=L] [--repeat=R]\n" +
   "                                         incremental vs full recalculation\n" +
   "  sheetcore --help\n" +
