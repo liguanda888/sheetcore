@@ -1,0 +1,48 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore/engine"
+
+import {
+  "liguanda888/sheetcore/formula",
+  "liguanda888/sheetcore/graph",
+  "liguanda888/sheetcore/reference",
+  "liguanda888/sheetcore/value",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn apply_binary(@formula.BinaryOp, @value.Value, @value.Value) -> @value.Value
+
+pub fn evaluate(Array[(String, String)]) -> Result[(Workbook, Trace), @formula.ParseError]
+
+pub fn evaluate_cell(Array[(String, String)], StringView) -> Result[@value.Value, @formula.ParseError]
+
+// Errors
+
+// Types and methods
+pub(all) struct Trace {
+  recomputed : Array[String]
+  cycles : Array[String]
+  error_cells : Int
+  total_cells : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Workbook {
+  raw : Map[String, String]
+  content : Map[String, @formula.CellInput]
+  values : Map[String, @value.Value]
+  graph : @graph.DepGraph
+  mut dirty : Array[String]
+}
+pub fn Workbook::display(Self, String) -> String
+pub fn Workbook::eval(Self, @formula.Expr) -> @value.Value
+pub fn Workbook::keys(Self) -> Array[String]
+pub fn Workbook::new() -> Self
+pub fn Workbook::recalculate(Self) -> Trace
+pub fn Workbook::set(Self, StringView, StringView) -> Result[Unit, @formula.ParseError]
+pub fn Workbook::set_many(Self, Array[(String, String)]) -> Result[Unit, @formula.ParseError]
+pub fn Workbook::value_at(Self, @reference.CellRef) -> @value.Value
+pub fn Workbook::value_of(Self, String) -> @value.Value
+
+// Type aliases
+
+// Traits

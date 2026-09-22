@@ -1,0 +1,40 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore/graph"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn compare_keys(StringView, StringView) -> Int
+
+pub fn contains(Array[String], String) -> Bool
+
+pub fn sort_keys(Array[String]) -> Array[String]
+
+// Errors
+
+// Types and methods
+pub(all) struct DepGraph {
+  precedents : Map[String, Array[String]]
+  dependents : Map[String, Array[String]]
+}
+pub fn DepGraph::affected_by(Self, Array[String]) -> Array[String]
+pub fn DepGraph::all_cells(Self) -> Array[String]
+pub fn DepGraph::clear_precedents(Self, String) -> Unit
+pub fn DepGraph::direct_dependents(Self, String) -> Array[String]
+pub fn DepGraph::direct_precedents(Self, String) -> Array[String]
+pub fn DepGraph::find_cycle_through(Self, String) -> Array[String]?
+pub fn DepGraph::has_cycle(Self) -> Bool
+pub fn DepGraph::new() -> Self
+pub fn DepGraph::set_precedents(Self, String, Array[String]) -> Unit
+pub fn DepGraph::topological_order(Self, Array[String]) -> TopoResult
+
+pub(all) struct TopoResult {
+  order : Array[String]
+  cycles : Array[String]
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits

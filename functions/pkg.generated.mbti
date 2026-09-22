@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore/functions"
+
+import {
+  "liguanda888/sheetcore/value",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn call(StringView, Array[Arg]) -> @value.Value
+
+pub fn floor_double(Double) -> Double
+
+pub let known_functions : Array[String]
+
+pub let lazy_functions : Array[String]
+
+pub fn pow_double(Double, Double) -> Double
+
+pub fn sqrt_double(Double) -> Double
+
+// Errors
+
+// Types and methods
+pub(all) enum Arg {
+  Scalar(@value.Value)
+  Cell(@value.Value)
+  List(Array[@value.Value])
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits

@@ -1,0 +1,13 @@
+// engine —— 增量重算引擎（纯逻辑）
+//
+// 依赖 formula（解析）、graph（依赖图）、functions（函数库）、value（值）。
+// 这里把四者接起来，并承担本项目最核心的那个承诺：
+// **改一个格子，只重算真正受影响的那些，并给出可复现的重算轨迹。**
+
+import {
+  "liguanda888/sheetcore/formula",
+  "liguanda888/sheetcore/functions",
+  "liguanda888/sheetcore/graph",
+  "liguanda888/sheetcore/reference",
+  "liguanda888/sheetcore/value",
+}

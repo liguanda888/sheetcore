@@ -25,6 +25,17 @@ pub suberror ParseError {
 }
 
 ///|
+/// 构造一个语法错误。
+///
+/// 需要一个工厂函数，是因为 `suberror` **只能在本包内构造**，
+/// 而 `engine/` 也要产生"这不是一个合法单元格地址"这类错误。
+/// 退化成普通枚举虽然能让外面构造，但那样就不能 `raise` 了 ——
+/// 保留 `raise` 让解析器每一层都能直接抛出，代码短得多。
+pub fn parse_error(message : String, position : Int) -> ParseError {
+  ParseError(message, position)
+}
+
+///|
 /// 解析上下文。`pos` 可变，逐个消费词法单元。
 priv struct Cursor {
   tokens : Array[Token]

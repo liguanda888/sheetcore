@@ -16,6 +16,8 @@ pub fn parse(StringView) -> Result[Expr, ParseError]
 
 pub fn parse_cell_input(StringView) -> Result[CellInput, ParseError]
 
+pub fn parse_error(String, Int) -> ParseError
+
 pub fn quote_formula_string(StringView) -> String
 
 pub fn token_text(Token) -> String
