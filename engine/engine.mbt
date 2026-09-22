@@ -391,10 +391,13 @@ fn Workbook::eval_to_arg(self : Workbook, e : @formula.Expr) -> @functions.Arg {
           for c in cells {
             values.push(self.value_of(c.canonical()))
           }
-          @functions.List(values)
+          // 行列数要一并交给函数库：`VLOOKUP` / `INDEX` 靠它索引。
+          // 展开顺序是行优先（见 `RangeRef::cells`），所以按行切分是对的。
+          let (c1, r1, c2, r2) = r.bounds()
+          @functions.List(values, r2 - r1 + 1, c2 - c1 + 1)
         }
         // 区域过大：不能静默当成空，否则 SUM 会给出错误的 0
-        None => @functions.List([@value.Error(@value.Num)])
+        None => @functions.List([@value.Error(@value.Num)], 1, 1)
       }
     @formula.Missing => @functions.Scalar(@value.Blank)
     _ => @functions.Scalar(self.eval(e))

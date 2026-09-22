@@ -58,16 +58,21 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `reference/` A1 记法与区域 | ✅ | 20 |
 | `formula/` 词法、AST、语法分析 | ✅ | 31 |
 | `graph/` 依赖图、拓扑排序、环检测 | ✅ | 17 |
-| `engine/` 增量重算与错误传播 | ✅ | 31 |
-| `functions/` 函数库（30 个） | ✅ | 覆盖在 engine 用例里 |
-| `cmd/main/` CLI | ✅ | 手动验证 |
+| `engine/` 增量重算、错误传播、查找函数集成 | ✅ | 50 |
+| `functions/` 函数库（**38 个**） | ✅ | 覆盖在 engine 用例里 |
+| `cmd/main/` CLI | ✅ | 手动 + CI 验证 |
 
 ```
-moon test --target native   →  Total tests: 121, passed: 121, failed: 0
+moon test --target native   →  Total tests: 140, passed: 140, failed: 0
 ```
 
-**尚未实现**：本地文件格式的读写（如 xlsx）、`INDEX`/`MATCH`/`VLOOKUP`
-等查找函数、日期时间类型、数组公式。
+函数覆盖：聚合（`SUM`/`PRODUCT`/`AVERAGE`/`MIN`/`MAX`/`MEDIAN`/`COUNT`/
+`COUNTA`/`COUNTBLANK`）、数学（`ABS`/`INT`/`SIGN`/`SQRT`/`POWER`/`MOD`/`ROUND`）、
+逻辑（`AND`/`OR`/`NOT`/`ISERROR`/`ISBLANK`/`ISNUMBER`/`ISTEXT`/`ISLOGICAL`/`ISNA`）、
+查找（`VLOOKUP`/`HLOOKUP`/`MATCH`/`INDEX`）、文本（`LEN`/`UPPER`/`LOWER`/`TRIM`/`CONCAT`）、
+以及由引擎惰性处理的 `IF`/`IFERROR`/`IFNA`。
+
+**尚未实现**：本地文件格式的读写（如 xlsx）、日期时间类型、数组公式。
 
 ## 试试看
 

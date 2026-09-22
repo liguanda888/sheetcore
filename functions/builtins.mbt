@@ -29,7 +29,11 @@
 pub(all) enum Arg {
   Scalar(@value.Value)
   Cell(@value.Value)
-  List(Array[@value.Value])
+  /// 区域展开出的值，外加**行列数**。
+  ///
+  /// 形状不是装饰：没有它就无法索引，`VLOOKUP` / `INDEX` 这类二维函数
+  /// 根本写不出来 —— 扁平数组区分不了"第 3 个"与"第 2 行第 1 列"。
+  List(Array[@value.Value], Int, Int)
 } derive(Debug)
 
 ///|
@@ -65,6 +69,11 @@ pub fn call(name : StringView, args : Array[Arg]) -> @value.Value {
     "ISTEXT" => is_kind(args, IsTextKind)
     "ISLOGICAL" => is_kind(args, IsLogicalKind)
     "ISNA" => is_na(args)
+    // ---- 查找 ----
+    "VLOOKUP" => lookup_vlookup(args)
+    "HLOOKUP" => lookup_hlookup(args)
+    "MATCH" => lookup_match(args)
+    "INDEX" => lookup_index(args)
     // ---- 文本 ----
     "LEN" => text_len(args)
     "UPPER" => text_map(args, UpperFn)
@@ -80,8 +89,8 @@ pub fn call(name : StringView, args : Array[Arg]) -> @value.Value {
 pub let known_functions : Array[String] = [
   "SUM", "PRODUCT", "AVERAGE", "MIN", "MAX", "MEDIAN", "COUNT", "COUNTA", "COUNTBLANK",
   "ABS", "INT", "SIGN", "SQRT", "POWER", "MOD", "ROUND", "AND", "OR", "NOT", "ISERROR",
-  "ISBLANK", "ISNUMBER", "ISTEXT", "ISLOGICAL", "ISNA", "LEN", "UPPER", "LOWER",
-  "TRIM", "CONCAT",
+  "ISBLANK", "ISNUMBER", "ISTEXT", "ISLOGICAL", "ISNA", "VLOOKUP", "HLOOKUP", "MATCH",
+  "INDEX", "LEN", "UPPER", "LOWER", "TRIM", "CONCAT",
 ]
 
 ///|
@@ -132,7 +141,7 @@ fn collect_numbers(
           Ok(None) => ()
           Err(e) => return Err(e)
         }
-      List(values) =>
+      List(values, _, _) =>
         for v in values {
           match cell_element(v) {
             Ok(Some(d)) => nums.push(d)
@@ -189,7 +198,7 @@ fn flatten(arg : Arg) -> Array[@value.Value] {
   match arg {
     Scalar(v) => [v]
     Cell(v) => [v]
-    List(values) => values
+    List(values, _, _) => values
   }
 }
 
@@ -199,7 +208,12 @@ fn single_value(arg : Arg) -> @value.Value {
   match arg {
     Scalar(v) => v
     Cell(v) => v
-    List(values) => if values.length() == 0 { @value.Blank } else { values[0] }
+    List(values, _, _) =>
+      if values.length() == 0 {
+        @value.Blank
+      } else {
+        values[0]
+      }
   }
 }
 

@@ -25,7 +25,7 @@ pub fn sqrt_double(Double) -> Double
 pub(all) enum Arg {
   Scalar(@value.Value)
   Cell(@value.Value)
-  List(Array[@value.Value])
+  List(Array[@value.Value], Int, Int)
 } derive(@debug.Debug)
 
 // Type aliases
