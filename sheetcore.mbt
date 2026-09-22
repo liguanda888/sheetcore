@@ -13,14 +13,19 @@
 /// - `graph/`     依赖图：建图、拓扑排序、环检测（纯）
 /// - `engine/`    增量重算引擎与错误传播（纯）
 /// - `functions/` 函数库（纯）
-/// - `cmd/main/`  CLI 入口（I/O）
+/// - `render/`    终端排版：显示列宽、表格对齐、比值格式（纯）
+/// - `cli/`       命令行解析：子命令、选项、用法文本（纯）
+/// - `cmd/main/`  只做 I/O：执行解析结果、排版输出（I/O）
+///
+/// 这个文件以前**不参与编译**（根目录没有 `moon.pkg`），所以上面这份清单
+/// 曾经静静漏掉两个子包而无人察觉。补上 `moon.pkg` 之后它才真的被检查。
 
 ///|
 /// 项目版本号，与 `moon.mod` 保持一致。
 pub let version : String = "0.1.0"
 
 ///|
-/// 一句话描述，供 CLI 与 `serverInfo` 使用。
+/// 一句话描述，供 `sheetcore --version` 打印。
 pub fn describe() -> String {
   "SheetCore v" +
   version +

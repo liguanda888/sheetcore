@@ -4,6 +4,7 @@
 // 所有计算逻辑都在 `engine/` 里（纯逻辑、可测试）。
 
 import {
+  "liguanda888/sheetcore",
   "liguanda888/sheetcore/cli",
   "liguanda888/sheetcore/engine",
   "liguanda888/sheetcore/formula",

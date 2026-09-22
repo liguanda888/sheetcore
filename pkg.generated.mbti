@@ -1,0 +1,15 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore"
+
+// Values
+pub fn describe() -> String
+
+pub let version : String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

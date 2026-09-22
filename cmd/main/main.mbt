@@ -23,6 +23,7 @@ fn main {
     @cli.Command::Demo => run_demo()
     @cli.Command::Example => run_example()
     @cli.Command::Bench(opts) => run_bench(opts)
+    @cli.Command::Version => println(@sheetcore.describe())
     @cli.Command::Help(topic) => println(@cli.usage_for(topic))
     @cli.Command::Bad(message, usage) => {
       println("error: " + message)

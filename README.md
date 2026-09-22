@@ -50,6 +50,8 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `cli/` | 命令行解析：子命令、选项、用法文本 |
 | `cmd/main/` | 命令行入口（**纯 I/O**，不做解析） |
 
+根包 `sheetcore.mbt` 只放版本号与一句话描述，供 `sheetcore --version` 打印。
+
 ## 状态
 
 早期开发中，但**已经能跑**。各包的实现与测试情况：
@@ -63,11 +65,11 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `engine/` 增量重算、错误传播、查找函数集成 | ✅ | 52 |
 | `functions/` 函数库（**38 个**） | ✅ | 覆盖在 engine 用例里 |
 | `render/` 终端排版（显示列宽、表格对齐、比值格式） | ✅ | 13 |
-| `cli/` 命令行解析（子命令、选项、用法文本） | ✅ | 25 |
+| `cli/` 命令行解析（子命令、选项、用法文本） | ✅ | 26 |
 | `cmd/main/` CLI | ✅ | 手动 + CI 验证 |
 
 ```
-moon test --target native   →  Total tests: 180, passed: 180, failed: 0
+moon test --target native   →  Total tests: 181, passed: 181, failed: 0
 ```
 
 函数覆盖：聚合（`SUM`/`PRODUCT`/`AVERAGE`/`MIN`/`MAX`/`MEDIAN`/`COUNT`/
@@ -105,6 +107,7 @@ _build/native/debug/build/cmd/main/main.exe bench
 # 有什么命令、某个选项是什么意思
 _build/native/debug/build/cmd/main/main.exe help
 _build/native/debug/build/cmd/main/main.exe help bench
+_build/native/debug/build/cmd/main/main.exe --version
 ```
 
 `example` 的输出（一张会真的出现在工作里的表）：

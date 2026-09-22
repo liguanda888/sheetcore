@@ -141,6 +141,21 @@ test "help COMMAND gives that command's usage, and an unknown one falls back" {
 }
 
 ///|
+test "--version is recognised, but -v is not guessed at" {
+  for flag in ["--version", "-V"] {
+    match parse([flag]) {
+      Version => ()
+      _ => abort("expected Version for " + flag)
+    }
+  }
+  // 只认 `-V`。`-v` 常常是 verbose，猜错比不认更烦人。
+  match parse(["-v"]) {
+    Bad(msg, _) => assert_eq(msg, "unknown command: -v")
+    _ => abort("expected Bad for -v")
+  }
+}
+
+///|
 test "demo and example reject extra arguments instead of ignoring them" {
   // 修复前 `demo extra` 会照常跑完演示，多余参数被静默吞掉。
   match parse(["demo"]) {

@@ -12,6 +12,8 @@ pub(all) enum Command {
   Demo
   Example
   Bench(BenchOptions)
+  /// 打印版本号
+  Version
   /// 要打印的帮助；`None` 表示顶层用法
   Help(String?)
   /// 用户输入有误：`(错误说明, 该打印的用法)`
@@ -82,6 +84,9 @@ pub fn parse(args : Array[String]) -> Command {
   }
   if is_help_flag(head) {
     return Help(None)
+  }
+  if is_version_flag(head) {
+    return Version
   }
   // 裸写 `CELL=CONTENT` 等价于 `eval`，这是常用的简写。
   // 但**只有真的含 `=`** 才这样解释：否则 `sheetcore nosuchcmd` 会被当成
@@ -200,6 +205,12 @@ fn is_help_flag(s : String) -> Bool {
 }
 
 ///|
+/// 是否是要求版本号的开关。
+fn is_version_flag(s : String) -> Bool {
+  s == "--version" || s == "-V"
+}
+
+///|
 /// 顶层用法。
 pub fn usage_top() -> String {
   "SheetCore — a spreadsheet calculation core in pure MoonBit\n" +
@@ -211,6 +222,7 @@ pub fn usage_top() -> String {
   "  sheetcore bench [--chains=N] [--length=L] [--repeat=R]\n" +
   "                                              incremental vs full recalculation\n" +
   "  sheetcore help [COMMAND]                    this text, or one command's options\n" +
+  "  sheetcore --version                         print the version\n" +
   "\n" +
   "  sheetcore CELL=CONTENT ...                  shorthand for `sheetcore eval`\n" +
   "\n" +

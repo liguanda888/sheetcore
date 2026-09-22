@@ -10,6 +10,8 @@ pub fn pad_left(StringView, Int) -> String
 
 pub fn pad_right(StringView, Int) -> String
 
+pub fn ratio_text(Int, Int) -> String
+
 pub fn render_table(Array[Array[String]], Array[Int]) -> String
 
 // Errors

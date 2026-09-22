@@ -85,6 +85,10 @@ jobs:
           cat bench.out
           grep -q "cells recomputed: 2.0x fewer" bench.out \
             || { echo "incremental recalculation lost its advantage"; exit 1; }
+          echo "--- version ---"
+          "$BIN" --version
+          "$BIN" --version | grep -q "SheetCore v" \
+            || { echo "--version did not print a version"; exit 1; }
           echo "CLI smoke test passed"
 
       - name: CLI error handling
