@@ -1,0 +1,54 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore/reference"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn cell_ref(Int, Int) -> CellRef
+
+pub fn column_index(StringView) -> Int?
+
+pub fn column_name(Int) -> String
+
+pub let max_columns : Int
+
+pub let max_range_cells : Int
+
+pub let max_rows : Int
+
+pub fn quote_sheet(String) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct CellRef {
+  sheet : String?
+  col : Int
+  row : Int
+  col_abs : Bool
+  row_abs : Bool
+} derive(Eq, @debug.Debug)
+pub fn CellRef::canonical(Self) -> String
+pub fn CellRef::parse(StringView) -> Self?
+pub fn CellRef::same_cell(Self, Self) -> Bool
+pub fn CellRef::to_text(Self) -> String
+
+pub(all) struct RangeRef {
+  sheet : String?
+  start : CellRef
+  end : CellRef
+} derive(Eq, @debug.Debug)
+pub fn RangeRef::bounds(Self) -> (Int, Int, Int, Int)
+pub fn RangeRef::canonical(Self) -> String
+pub fn RangeRef::cell_count(Self) -> Int
+pub fn RangeRef::cells(Self) -> Array[CellRef]?
+pub fn RangeRef::exact_cell_count(Self) -> Int64
+pub fn RangeRef::is_single(Self) -> Bool
+pub fn RangeRef::parse(StringView) -> Self?
+pub fn RangeRef::to_text(Self) -> String
+
+// Type aliases
+
+// Traits
