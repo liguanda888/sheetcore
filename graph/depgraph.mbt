@@ -359,3 +359,18 @@ pub fn sort_keys(items : Array[String]) -> Array[String] {
   }
   out
 }
+
+///|
+/// 把若干 key 拼成一行，用于错误提示。
+pub fn join_keys(items : Array[String]) -> String {
+  let buf = StringBuilder::StringBuilder()
+  let mut first = true
+  for item in items {
+    if !first {
+      buf.write_string(", ")
+    }
+    buf.write_string(item)
+    first = false
+  }
+  buf.to_string()
+}

@@ -50,9 +50,61 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 
 ## 状态
 
-早期开发中。当前已实现并测试：`value/`（22 个测试）。
+早期开发中，但**已经能跑**。各包的实现与测试情况：
 
-详见 [`docs/roadmap.md`](docs/roadmap.md)。
+| 包 | 状态 | 测试数 |
+|---|---|---|
+| `value/` 值类型与强制转换 | ✅ | 22 |
+| `reference/` A1 记法与区域 | ✅ | 20 |
+| `formula/` 词法、AST、语法分析 | ✅ | 31 |
+| `graph/` 依赖图、拓扑排序、环检测 | ✅ | 17 |
+| `engine/` 增量重算与错误传播 | ✅ | 31 |
+| `functions/` 函数库（30 个） | ✅ | 覆盖在 engine 用例里 |
+| `cmd/main/` CLI | ✅ | 手动验证 |
+
+```
+moon test --target native   →  Total tests: 121, passed: 121, failed: 0
+```
+
+**尚未实现**：本地文件格式的读写（如 xlsx）、`INDEX`/`MATCH`/`VLOOKUP`
+等查找函数、日期时间类型、数组公式。
+
+## 试试看
+
+```bash
+moon build --target native
+
+# 求值一张表
+_build/native/debug/build/cmd/main/main.exe eval A1=10 A2=20 B1==A1+A2
+#   A1 = 10
+#   A2 = 20
+#   B1 = 30
+
+# 顺便看重算轨迹
+_build/native/debug/build/cmd/main/main.exe eval --trace A1=1 B1==A1+1 C1==B1*2
+#   recomputed 3 of 3 cells: A1 -> B1 -> C1
+
+# 演示增量重算（录制演示视频用的就是它）
+_build/native/debug/build/cmd/main/main.exe demo
+```
+
+`demo` 的输出：
+
+```
+=== 2. change A1 from 10 to 100 ===
+A1 = 100   A2 = 20   A3 = 30
+B1 = 200   B2 = 40   B3 = 60
+C1 = 300
+
+recomputed 3 of 7 cells: A1 -> B1 -> C1
+```
+
+七个格子里只重算了三个 —— `B2`、`B3` 不依赖 `A1`，所以完全没动。
+
+> **在 Windows 的 PowerShell 里传含双引号的公式会被 shell 吃掉引号**
+> （`'B1==IFERROR(1/0,"n/a")'` 到不了程序手里）。这是 PowerShell 向原生程序
+> 传参的老问题，不是程序的行为 —— 命令行本身只做原样透传，字符串字面量
+> 由单元测试覆盖。需要测这类公式时请写进脚本文件再调用。
 
 ## 构建
 

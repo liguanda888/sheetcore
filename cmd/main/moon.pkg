@@ -1,0 +1,13 @@
+// cmd/main —— 命令行入口
+//
+// 这一层只做 I/O 与排版：解析参数、调用引擎、把结果打到 stdout。
+// 所有计算逻辑都在 `engine/` 里（纯逻辑、可测试）。
+
+import {
+  "liguanda888/sheetcore/engine",
+  "liguanda888/sheetcore/formula",
+  "liguanda888/sheetcore/graph",
+  "moonbitlang/core/env",
+}
+
+pkgtype(kind: "executable")

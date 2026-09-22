@@ -10,6 +10,8 @@ pub fn compare_keys(StringView, StringView) -> Int
 
 pub fn contains(Array[String], String) -> Bool
 
+pub fn join_keys(Array[String]) -> String
+
 pub fn sort_keys(Array[String]) -> Array[String]
 
 // Errors
