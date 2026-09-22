@@ -213,7 +213,7 @@ moon test --target native
 ## 文档
 
 - [设计说明](docs/architecture.md) —— **为什么这样设计**：六个关键决定、
-  刻意与 Excel 不同的地方、以及测试抓到过的那些静默 bug
+  刻意与 Excel 不同的地方、以及一份缺陷记录（逐条写明后果与"为什么难发现"）
 
 ## 许可证
 
