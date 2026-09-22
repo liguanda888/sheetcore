@@ -128,6 +128,17 @@ pub fn Workbook::display(self : Workbook, key : String) -> String {
 }
 
 ///|
+/// 表里有多少个有内容的格子。
+///
+/// 与 `keys()` 分开是有原因的：`keys()` 要排序（供显示），而重算时只需要一个数。
+/// 早期版本在 `recalculate` 里调 `keys().length()`，于是每次重算都白排一次序 ——
+/// 而且用的是插入排序，1 万个格子就是上亿次比较，还每次都比较字符串。
+/// 由基准测试发现。
+pub fn Workbook::cell_count(self : Workbook) -> Int {
+  self.content.to_array().length()
+}
+
+///|
 /// 表里所有有内容的格子（规范化 key，按码位排序以保证顺序稳定）。
 pub fn Workbook::keys(self : Workbook) -> Array[String] {
   let out : Array[String] = []
@@ -146,7 +157,7 @@ pub fn Workbook::keys(self : Workbook) -> Array[String] {
 pub fn Workbook::recalculate(self : Workbook) -> Trace {
   let seeds = self.dirty
   self.dirty = []
-  let total = self.keys().length()
+  let total = self.cell_count()
   if seeds.length() == 0 {
     return {
       recomputed: [],

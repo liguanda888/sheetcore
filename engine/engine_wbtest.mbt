@@ -419,3 +419,77 @@ test "a parse error is reported instead of writing a half-broken cell" {
   // 解析失败不应留下任何痕迹
   assert_eq(w.keys(), [])
 }
+
+///|
+test "a large sheet recomputes only the affected chain" {
+  // 4 条互不相干的链、每条 250 格，共 1000 格。
+  //
+  // 这条测试有两个作用：
+  // 1. 把"只重算受影响部分"这个性质在**真实规模**上锁住（不只是 5 个格子的小例子）
+  // 2. 充当性能回归的哨兵 —— 早期版本的拓扑排序是 O(n³)，
+  //    1000 个格子要 885 ms；现在是个位数毫秒。复杂度若再退化回去，
+  //    这条测试会明显变慢，从而顶到 CI 的超时。
+  let entries : Array[(String, String)] = []
+  let mut chain = 0
+  while chain < 4 {
+    let col = @reference.column_name(chain)
+    let mut row = 1
+    while row <= 250 {
+      let key = col + row.to_string()
+      let content = if row == 1 {
+        "1"
+      } else {
+        "=" + col + (row - 1).to_string() + "+1"
+      }
+      entries.push((key, content))
+      row = row + 1
+    }
+    chain = chain + 1
+  }
+  let w = Workbook::new()
+  match w.set_many(entries) {
+    Ok(_) => ()
+    Err(_) => abort("写入失败")
+  }
+  // 首次：1000 个格子全脏
+  let first = w.recalculate()
+  assert_eq(first.recomputed.length(), 1000)
+  assert_eq(first.total_cells, 1000)
+  // 只改第一条链的表头
+  match w.set("A1", "5") {
+    Ok(_) => ()
+    Err(_) => abort("写入失败")
+  }
+  let trace = w.recalculate()
+  assert_eq(trace.recomputed.length(), 250)
+  assert_eq(trace.total_cells, 1000)
+  // 两条链各自算对，互不干扰
+  assert_eq(get(w, "A250"), @value.Number(254.0))
+  assert_eq(get(w, "B250"), @value.Number(250.0))
+}
+
+///|
+test "topological ordering stays deterministic at scale" {
+  // 顺序可复现是"重算轨迹可复现"的前提，规模化以后也必须成立。
+  let entries : Array[(String, String)] = [
+    ("A1", "1"),
+    ("A2", "=A1+1"),
+    ("A3", "=A2+1"),
+    ("A4", "=A1+A2+A3"),
+    ("B1", "=A4*2"),
+    ("B2", "=B1+1"),
+  ]
+  let first = make(entries)
+  match first.set("A1", "9") {
+    Ok(_) => ()
+    Err(_) => abort("写入失败")
+  }
+  let t1 = first.recalculate().recomputed
+  let second = make(entries)
+  match second.set("A1", "9") {
+    Ok(_) => ()
+    Err(_) => abort("写入失败")
+  }
+  let t2 = second.recalculate().recomputed
+  assert_eq(t1, t2)
+}

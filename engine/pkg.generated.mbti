@@ -33,6 +33,7 @@ pub(all) struct Workbook {
   graph : @graph.DepGraph
   mut dirty : Array[String]
 }
+pub fn Workbook::cell_count(Self) -> Int
 pub fn Workbook::display(Self, String) -> String
 pub fn Workbook::eval(Self, @formula.Expr) -> @value.Value
 pub fn Workbook::keys(Self) -> Array[String]

@@ -58,12 +58,12 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `reference/` A1 记法与区域 | ✅ | 20 |
 | `formula/` 词法、AST、语法分析 | ✅ | 31 |
 | `graph/` 依赖图、拓扑排序、环检测 | ✅ | 17 |
-| `engine/` 增量重算、错误传播、查找函数集成 | ✅ | 50 |
+| `engine/` 增量重算、错误传播、查找函数集成 | ✅ | 52 |
 | `functions/` 函数库（**38 个**） | ✅ | 覆盖在 engine 用例里 |
-| `cmd/main/` CLI | ✅ | 手动 + CI 验证 |
+| `cmd/main/` CLI（`eval` / `demo` / `bench`） | ✅ | 手动 + CI 验证 |
 
 ```
-moon test --target native   →  Total tests: 140, passed: 140, failed: 0
+moon test --target native   →  Total tests: 142, passed: 142, failed: 0
 ```
 
 函数覆盖：聚合（`SUM`/`PRODUCT`/`AVERAGE`/`MIN`/`MAX`/`MEDIAN`/`COUNT`/
@@ -91,7 +91,30 @@ _build/native/debug/build/cmd/main/main.exe eval --trace A1=1 B1==A1+1 C1==B1*2
 
 # 演示增量重算（录制演示视频用的就是它）
 _build/native/debug/build/cmd/main/main.exe demo
+
+# 量一下增量到底省了多少
+_build/native/debug/build/cmd/main/main.exe bench
 ```
+
+`bench` 的输出（本机实测）：
+
+```
+building 10 independent chains of 1000 cells (10000 cells)
+
+full recalculation
+  10000 cells in 50 ms
+incremental recalculation (one head changed)
+  1000 cells in 3 ms
+
+cells recomputed: 10.0x fewer
+wall clock:       16.6x faster
+```
+
+规模再大一点（4 万格）：全量 276 ms、增量 13 ms，**格子少 20 倍、快 21.2 倍**。
+
+> **格子数是精确的，耗时是单机测的。** 程序会取多次重复中的**最小值** ——
+> 调度抖动只会让某一次变慢，不会让某一次变快，所以最小值最接近真实开销。
+> 两者都打印出来，是为了不让读者误以为耗时也是可复现的。
 
 `demo` 的输出：
 

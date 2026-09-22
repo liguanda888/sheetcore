@@ -108,11 +108,17 @@ pub fn DepGraph::affected_by(
   self : DepGraph,
   seeds : Array[String],
 ) -> Array[String] {
-  let seen : Array[String] = []
+  // 成员判断用 Map，不用数组线性查找。
+  //
+  // 原来的实现每遇到一个格子就扫一遍已见集合，n 个格子就是 O(n²)。
+  // 1 万个格子时这一处就能吃掉几十秒 —— 由基准测试发现（它当时直接跑不完）。
+  let seen : Map[String, Unit] = Map([])
+  let out : Array[String] = []
   let queue : Array[String] = []
   for s in seeds {
-    if !contains(seen, s) {
-      seen.push(s)
+    if !seen.contains(s) {
+      seen.set(s, ())
+      out.push(s)
       queue.push(s)
     }
   }
@@ -121,13 +127,82 @@ pub fn DepGraph::affected_by(
     let current = queue[head]
     head = head + 1
     for next in self.direct_dependents(current) {
-      if !contains(seen, next) {
-        seen.push(next)
+      if !seen.contains(next) {
+        seen.set(next, ())
+        out.push(next)
         queue.push(next)
       }
     }
   }
-  seen
+  out
+}
+
+///|
+/// 字符串最小堆 —— Kahn 算法里的"就绪集合"。
+///
+/// 为什么需要它：既要**每次取字典序最小的**（保证轨迹可复现），
+/// 又要避免每次扫全表。堆同时满足这两点：取最小 O(log n)，
+/// 插入 O(log n)。用有序数组或每次线性扫描都会把排序拖回 O(n²)。
+priv struct MinHeap {
+  items : Array[String]
+}
+
+///|
+fn MinHeap::new() -> MinHeap {
+  { items: [], }
+}
+
+///|
+fn MinHeap::push(self : MinHeap, value : String) -> Unit {
+  self.items.push(value)
+  let mut i = self.items.length() - 1
+  while i > 0 {
+    let parent = (i - 1) / 2
+    if compare_keys(self.items[i], self.items[parent]) < 0 {
+      let tmp = self.items[i]
+      self.items[i] = self.items[parent]
+      self.items[parent] = tmp
+      i = parent
+    } else {
+      break
+    }
+  }
+}
+
+///|
+fn MinHeap::pop(self : MinHeap) -> String? {
+  let n = self.items.length()
+  if n == 0 {
+    return None
+  }
+  let top = self.items[0]
+  let last = self.items[n - 1]
+  ignore(self.items.pop())
+  if n > 1 {
+    self.items[0] = last
+    let mut i = 0
+    while true {
+      let left = 2 * i + 1
+      let right = 2 * i + 2
+      let mut smallest = i
+      if left < self.items.length() &&
+        compare_keys(self.items[left], self.items[smallest]) < 0 {
+        smallest = left
+      }
+      if right < self.items.length() &&
+        compare_keys(self.items[right], self.items[smallest]) < 0 {
+        smallest = right
+      }
+      if smallest == i {
+        break
+      }
+      let tmp = self.items[i]
+      self.items[i] = self.items[smallest]
+      self.items[smallest] = tmp
+      i = smallest
+    }
+  }
+  Some(top)
 }
 
 ///|
@@ -153,69 +228,76 @@ pub(all) struct TopoResult {
 /// 只需要给受影响的那些格子排序。排序用 **Kahn 算法**，
 /// 每一步在就绪集合里取字典序最小的，保证**同一输入得到同一顺序** ——
 /// 这让"重算轨迹"可复现，也让测试稳定。
+///
+/// **复杂度**：成员判断走 `Map`、就绪集合走最小堆，因此是 `O(n log n + m)`。
+/// 早期版本用数组做成员判断、每轮扫全表挑最小，实际是 `O(n³)` ——
+/// 1 万个格子上直接跑不完，由基准测试发现。
 pub fn DepGraph::topological_order(
   self : DepGraph,
   nodes : Array[String],
 ) -> TopoResult {
+  let in_nodes : Map[String, Unit] = Map([])
+  for n in nodes {
+    in_nodes.set(n, ())
+  }
   // 只统计"子集内部"的入边 —— 子集外的依赖不在本次重算范围内。
-  // 自环也计入（`p != n` 的排除只针对重复计数，自环在下面单独判）。
   let indegree : Map[String, Int] = Map([])
   for n in nodes {
+    let precedents = self.direct_precedents(n)
     let mut count = 0
-    for p in self.direct_precedents(n) {
-      if contains(nodes, p) && p != n {
+    for p in precedents {
+      if in_nodes.contains(p) && p != n {
         count = count + 1
       }
     }
-    // 自环：自己依赖自己，永远算不出来
-    if contains(self.direct_precedents(n), n) {
+    // 自环：自己依赖自己，永远算不出来。单独计一次，
+    // 否则 `p != n` 的过滤会把它漏掉。
+    if contains(precedents, n) {
       count = count + 1
     }
     indegree.set(n, count)
   }
-  let order : Array[String] = []
-  let done : Array[String] = []
-  while true {
-    // 取一个入度为 0 且尚未输出的、字典序最小的节点
-    let mut pick : String? = None
-    for n in nodes {
-      if contains(done, n) {
-        continue
-      }
-      let d = match indegree.get(n) {
-        Some(v) => v
-        None => 0
-      }
-      if d == 0 {
-        match pick {
-          None => pick = Some(n)
-          Some(best) => if compare_keys(n, best) < 0 { pick = Some(n) }
-        }
-      }
+  let ready = MinHeap::new()
+  for n in nodes {
+    if degree_of_map(indegree, n) == 0 {
+      ready.push(n)
     }
-    let chosen = match pick {
+  }
+  let order : Array[String] = []
+  let done : Map[String, Unit] = Map([])
+  while true {
+    let chosen = match ready.pop() {
       Some(n) => n
       None => break
     }
     order.push(chosen)
-    done.push(chosen)
+    done.set(chosen, ())
     for dependent in self.direct_dependents(chosen) {
-      if contains(nodes, dependent) && !contains(done, dependent) {
-        let current = match indegree.get(dependent) {
-          Some(v) => v
-          None => 0
+      if in_nodes.contains(dependent) && !done.contains(dependent) {
+        let next = degree_of_map(indegree, dependent) - 1
+        indegree.set(dependent, next)
+        if next == 0 {
+          ready.push(dependent)
         }
-        indegree.set(dependent, current - 1)
       }
     }
   }
   let cycles : Array[String] = []
   for n in nodes {
-    if !contains(done, n) {
+    if !done.contains(n) {
       cycles.push(n)
     }
   }
   { order, cycles: sort_keys(cycles), }
+}
+
+///|
+/// 从入度表里取值；缺失按 0 处理。
+fn degree_of_map(map : Map[String, Int], key : String) -> Int {
+  match map.get(key) {
+    Some(v) => v
+    None => 0
+  }
 }
 
 ///|
