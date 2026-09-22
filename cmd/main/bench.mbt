@@ -146,7 +146,10 @@ fn run_bench(args : Array[String]) -> Unit {
   println("")
   // 格子数是**精确**的；耗时是单机测得、取重复中的最小值。
   println("cells recomputed: " + ratio_text(total, best_cells) + " fewer")
-  if best_ms > 0 {
+  // 只有全量确实**测得比**增量慢时才报倍数。
+  // 两者都是 1 ms（或都取到 0）时，比值的意义是"这个规模下测不出来"，
+  // 而不是"一样快" —— 报成 1.0x 会让人以为没有提升。
+  if best_ms > 0 && full_ms > best_ms {
     println(
       "wall clock:       " +
       ratio_text(full_ms.to_int(), best_ms.to_int()) +
@@ -154,8 +157,8 @@ fn run_bench(args : Array[String]) -> Unit {
     )
   } else {
     println(
-      "wall clock:       below the millisecond clock's resolution at this size; " +
-      "raise --length to measure it",
+      "wall clock:       not measurable at this size (both runs fit in about a " +
+      "millisecond); raise --length to measure it",
     )
   }
   println("")
