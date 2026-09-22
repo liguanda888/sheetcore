@@ -1,0 +1,76 @@
+name: CI
+
+# 为什么这些步骤要重试、缓存、并且把 `moon update` 做成非致命：
+# MoonBit 官方文档站的索引是一个 git 仓库，每次全新拉取约 9 MB。
+# 在 GitHub 的 runner 上，网络步骤曾经占掉一次运行 7 分 54 秒并超时失败 ——
+# 而失败的全部是**网络步骤**，代码检查/构建/测试从没失败过。
+# 所以：缓存索引、给网络步骤加重试、并把索引刷新降级为警告。
+# 这样"CI 红"就只意味着代码真的有问题。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache MoonBit registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.moon/registry
+          key: moon-registry-${{ runner.os }}-${{ hashFiles('moon.mod') }}
+          restore-keys: |
+            moon-registry-${{ runner.os }}-
+
+      - name: Set up MoonBit
+        run: |
+          for i in 1 2 3; do
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash && break
+            echo "install attempt $i failed, retrying"
+            sleep 10
+          done
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Update dependencies
+        # 索引刷新失败不该让整次 CI 变红：依赖已经在 moon.mod 里锁定了
+        run: moon update || echo "::warning::moon update failed (treated as non-fatal)"
+
+      - name: Show toolchain version
+        run: moon version --all || moon version
+
+      - name: Check
+        run: moon check
+
+      - name: Build (native)
+        run: moon build --target native
+
+      - name: Test (default target)
+        run: moon test
+
+      - name: Test (native)
+        run: moon test --target native
+
+      - name: CLI smoke test
+        run: |
+          BIN="_build/native/debug/build/cmd/main/main.exe"
+          [ -x "$BIN" ] || BIN="_build/native/debug/build/cmd/main/main"
+          echo "--- eval ---"
+          OUT="$("$BIN" eval A1=10 A2=20 B1==A1+A2)"
+          echo "$OUT"
+          echo "$OUT" | grep -q "B1 = 30" || { echo "unexpected eval output"; exit 1; }
+          echo "--- trace ---"
+          OUT="$("$BIN" eval --trace A1=1 B1==A1+1 C1==B1*2)"
+          echo "$OUT"
+          echo "$OUT" | grep -q "recomputed 3 of 3 cells" || { echo "unexpected trace"; exit 1; }
+          echo "--- demo ---"
+          "$BIN" demo > demo.out
+          cat demo.out
+          grep -q "recomputed 3 of 7 cells" demo.out \
+            || { echo "incremental recalculation did not skip unrelated cells"; exit 1; }
+          echo "CLI smoke test passed"
