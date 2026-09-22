@@ -29,3 +29,20 @@ test "ratio_text can report a ratio below one" {
   // 增量比全量还慢时会落到这里（规模太小、噪声大）。不掩饰。
   assert_eq(ratio_text(5, 10), "0.5x")
 }
+
+///|
+test "plural says 1 run, not 1 runs" {
+  // `--repeat=1` 是 CI 里的实际用法，所以这条路径每次 CI 都会走到。
+  assert_eq(plural(1, "run"), "1 run")
+  assert_eq(plural(2, "run"), "2 runs")
+  assert_eq(plural(5, "run"), "5 runs")
+  assert_eq(plural(0, "run"), "0 runs")
+}
+
+///|
+test "plural covers the other nouns bench prints" {
+  assert_eq(plural(1, "chain"), "1 chain")
+  assert_eq(plural(10, "chain"), "10 chains")
+  assert_eq(plural(1, "cell"), "1 cell")
+  assert_eq(plural(1000, "cell"), "1000 cells")
+}

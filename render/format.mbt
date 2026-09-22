@@ -20,3 +20,19 @@ pub fn ratio_text(baseline : Int, actual : Int) -> String {
   let frac = tenths % 10
   whole.to_string() + "." + frac.to_string() + "x"
 }
+
+///|
+/// 名词单复数：`1 run` / `3 runs`。
+///
+/// 为什么需要：`--repeat=1` 很常见（CI 里就是这么跑的），不处理就会打印
+/// "minimum of 1 runs"。凡是数字与名词挨着出现的地方都要过这一手。
+///
+/// 只加 `s`，不做 `-y` → `-ies` 这类英语变形 —— 这里用到的词
+/// （run / chain / cell）都是规则名词，为它们写一套词法规则不值得。
+pub fn plural(n : Int, singular : String) -> String {
+  if n == 1 {
+    "1 " + singular
+  } else {
+    n.to_string() + " " + singular + "s"
+  }
+}

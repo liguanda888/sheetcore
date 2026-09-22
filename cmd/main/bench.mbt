@@ -19,12 +19,12 @@ fn run_bench(opts : @cli.BenchOptions) -> Unit {
   let total = chains * length
   println(
     "building " +
-    chains.to_string() +
-    " independent chains of " +
-    length.to_string() +
-    " cells (" +
-    total.to_string() +
-    " cells)",
+    @render.plural(chains, "independent chain") +
+    " of " +
+    @render.plural(length, "cell") +
+    " (" +
+    @render.plural(total, "cell") +
+    ")",
   )
 
   // ---- 构造：第 m 条链在列 column_name(m)，第 1 行是常量，其余 =上一格+1 ----
@@ -125,8 +125,8 @@ fn run_bench(opts : @cli.BenchOptions) -> Unit {
   println(
     "The cell count is exact. The timings are from one machine, taking the\n" +
     "minimum of " +
-    repeat.to_string() +
-    " runs; scheduling noise only ever makes a run slower, so the minimum is\n" +
-    "the closest thing to a true cost.",
+    @render.plural(repeat, "run") +
+    "; scheduling noise only ever makes a run\n" +
+    "slower, so the minimum is the closest thing to a true cost.",
   )
 }

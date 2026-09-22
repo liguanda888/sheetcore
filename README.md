@@ -63,13 +63,13 @@ SheetCore 做的就是这件事的 **MoonBit 实现**，不含任何 UI。
 | `formula/` 词法、AST、语法分析 | ✅ | 31 |
 | `graph/` 依赖图、拓扑排序、环检测 | ✅ | 17 |
 | `engine/` 增量重算、错误传播、查找函数集成 | ✅ | 52 |
-| `functions/` 函数库（**38 个**） | ✅ | 覆盖在 engine 用例里 |
-| `render/` 终端排版（显示列宽、表格对齐、比值格式） | ✅ | 13 |
+| `functions/` 函数库（**37 个**） | ✅ | 覆盖在 engine 用例里 |
+| `render/` 终端排版（显示列宽、表格对齐、比值格式） | ✅ | 15 |
 | `cli/` 命令行解析（子命令、选项、用法文本） | ✅ | 26 |
 | `cmd/main/` CLI | ✅ | 手动 + CI 验证 |
 
 ```
-moon test --target native   →  Total tests: 181, passed: 181, failed: 0
+moon test --target native   →  Total tests: 183, passed: 183, failed: 0
 ```
 
 函数覆盖：聚合（`SUM`/`PRODUCT`/`AVERAGE`/`MIN`/`MAX`/`MEDIAN`/`COUNT`/
