@@ -364,6 +364,24 @@ pub(all) struct RangeRef {
 } derive(Debug, Eq)
 
 ///|
+/// 由两个引用构造区域（语法分析器用：`Ref ':' Ref`）。
+///
+/// 两个角的表名必须一致；只写在一侧的 `Sheet2!` 视为整个区域的表名。
+/// 区域自身不持有表名，表名统一收进 `sheet` 字段、两角的 `sheet` 清空 ——
+/// 否则 `Sheet2!A1:B2` 会留下"A1 无表名、B2 有表名"的不一致状态。
+pub fn range_from(a : CellRef, b : CellRef) -> RangeRef? {
+  let sheet = match (a.sheet, b.sheet) {
+    (Some(x), Some(y)) => if x != y { return None } else { Some(x) }
+    (Some(x), None) => Some(x)
+    (None, Some(y)) => Some(y)
+    (None, None) => None
+  }
+  let start = { ..a, sheet: None, }
+  let end = { ..b, sheet: None, }
+  Some({ sheet, start, end, })
+}
+
+///|
 /// 解析区域；单个引用（`A1`）也接受，此时 start == end。
 pub fn RangeRef::parse(text : StringView) -> RangeRef? {
   let s = text.trim()

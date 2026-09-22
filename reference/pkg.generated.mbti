@@ -20,6 +20,8 @@ pub let max_rows : Int
 
 pub fn quote_sheet(String) -> String
 
+pub fn range_from(CellRef, CellRef) -> RangeRef?
+
 // Errors
 
 // Types and methods

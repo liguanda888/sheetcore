@@ -1,0 +1,109 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore/formula"
+
+import {
+  "liguanda888/sheetcore/reference",
+  "liguanda888/sheetcore/value",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn literal_value(StringView) -> @value.Value
+
+pub fn number_lit(Double) -> Expr
+
+pub fn parse(StringView) -> Result[Expr, ParseError]
+
+pub fn parse_cell_input(StringView) -> Result[CellInput, ParseError]
+
+pub fn quote_formula_string(StringView) -> String
+
+pub fn token_text(Token) -> String
+
+pub fn tokenize(StringView) -> Result[Array[Token], LexError]
+
+// Errors
+pub suberror ParseError {
+  ParseError(String, Int)
+}
+
+// Types and methods
+pub(all) enum BinaryOp {
+  Pow
+  Mul
+  Div
+  Add
+  Sub
+  Concat
+  Eq
+  Ne
+  Lt
+  Le
+  Gt
+  Ge
+} derive(Eq, @debug.Debug)
+pub fn BinaryOp::symbol(Self) -> String
+
+pub(all) enum CellInput {
+  Formula(Expr)
+  Literal(@value.Value)
+}
+
+pub(all) enum Expr {
+  NumberLit(Double)
+  TextLit(String)
+  BoolLit(Bool)
+  ErrorLit(@value.CalcError)
+  Ref(@reference.CellRef)
+  Range(@reference.RangeRef)
+  Unary(UnaryOp, Expr)
+  Binary(BinaryOp, Expr, Expr)
+  Call(String, Array[Expr])
+  Missing
+} derive(Eq, @debug.Debug)
+pub fn Expr::collect_functions(Self) -> Array[String]
+pub fn Expr::collect_refs(Self) -> Array[@reference.CellRef]
+pub fn Expr::to_formula(Self) -> String
+
+pub(all) struct LexError {
+  message : String
+  position : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Token {
+  Number(Double)
+  Str(String)
+  Ident(String)
+  BoolLit(Bool)
+  ErrorLit(@value.CalcError)
+  Ref(@reference.CellRef)
+  Plus
+  Minus
+  Star
+  Slash
+  Caret
+  Amp
+  EqOp
+  NeOp
+  LtOp
+  LeOp
+  GtOp
+  GeOp
+  LParen
+  RParen
+  Comma
+  Colon
+  Percent
+  Eof
+} derive(Eq, @debug.Debug)
+
+pub(all) enum UnaryOp {
+  Neg
+  Pos
+  Percent
+} derive(Eq, @debug.Debug)
+pub fn UnaryOp::symbol(Self) -> String
+
+// Type aliases
+
+// Traits

@@ -1,0 +1,10 @@
+// formula —— 公式语言：词法分析、AST、语法分析（纯逻辑）
+//
+// 依赖 `value/`（错误字面量）与 `reference/`（单元格地址）。
+// 分开成包的理由：词法/语法是**纯文本处理**，与"表格怎么算"无关，
+// 可以脱离引擎单独测试。
+
+import {
+  "liguanda888/sheetcore/reference",
+  "liguanda888/sheetcore/value",
+}
