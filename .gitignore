@@ -1,0 +1,13 @@
+# MoonBit 构建产物
+_build/
+.mooncakes/
+target/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 系统
+.DS_Store
+Thumbs.db

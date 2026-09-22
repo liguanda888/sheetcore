@@ -1,0 +1,71 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liguanda888/sheetcore/value"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn abs_double(Double) -> Double
+
+pub fn ascii_upper(StringView) -> String
+
+pub fn boolean(Bool) -> Value
+
+pub fn compare(Value, Value) -> Int
+
+pub fn compare_strings(StringView, StringView) -> Int
+
+pub fn err(CalcError) -> Value
+
+pub fn format_number(Double) -> String
+
+pub fn int_to_string(Int) -> String
+
+pub fn is_integral(Double) -> Bool
+
+pub fn num(Double) -> Value
+
+pub fn parse_number(StringView) -> Double?
+
+pub fn text(StringView) -> Value
+
+pub fn trunc_double(Double) -> Double
+
+pub fn value_eq(Value, Value) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) enum CalcError {
+  DivByZero
+  ValueType
+  Ref
+  Name
+  Num
+  NotAvailable
+  Cycle
+} derive(Eq, @debug.Debug)
+pub fn CalcError::from_literal(StringView) -> Self?
+pub fn CalcError::literal(Self) -> String
+pub fn CalcError::propagates(Self) -> Bool
+
+pub(all) enum Value {
+  Blank
+  Number(Double)
+  Text(String)
+  Bool(Bool)
+  Error(CalcError)
+} derive(Eq, @debug.Debug)
+pub fn Value::as_bool(Self) -> Result[Bool, CalcError]
+pub fn Value::as_number(Self) -> Result[Double, CalcError]
+pub fn Value::as_text(Self) -> String
+pub fn Value::display(Self) -> String
+pub fn Value::is_blank(Self) -> Bool
+pub fn Value::is_error(Self) -> Bool
+pub fn Value::is_number(Self) -> Bool
+pub fn Value::rank(Self) -> Int
+
+// Type aliases
+
+// Traits
